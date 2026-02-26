@@ -1,7 +1,8 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, Request, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignInDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
+import { LocalAuthGuard } from './guards/local-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -12,8 +13,14 @@ export class AuthController {
     return this.authService.signUp(signUpDto);
   }
 
+  @UseGuards(LocalAuthGuard)
   @Post('sign-in')
-  signIn(@Body() signInDto: SignInDto) {
-    return this.authService.signIn(signInDto);
+  signIn(@Request() req) {
+    return this.authService.signIn(req.user);
+  }
+
+  @Post('refresh-token')
+  accessRefreshToken(@Body('refreshToken') refreshToken: string) {
+    return this.authService.accessRefreshToken(refreshToken);
   }
 }

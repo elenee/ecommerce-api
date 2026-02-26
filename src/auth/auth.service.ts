@@ -8,12 +8,14 @@ import * as bcrypt from 'bcrypt';
 import { UsersService } from 'src/users/users.service';
 import { SignInDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private readonly jwtService: JwtService,
+    private prisma: PrismaService,
   ) {}
 
   async signUp(signUpDto: SignUpDto) {
@@ -31,7 +33,10 @@ export class AuthService {
   async validateUser(signInDto: SignInDto) {
     const user = await this.usersService.findByEmail(signInDto.email);
     if (!user) throw new UnauthorizedException('Invalid credentials');
-    const isPasswValid = await bcrypt.compare(signInDto.password, user.password);
+    const isPasswValid = await bcrypt.compare(
+      signInDto.password,
+      user.password,
+    );
     if (!isPasswValid) throw new UnauthorizedException('Invalid credentials');
     return user;
   }
@@ -44,6 +49,47 @@ export class AuthService {
       expiresIn: '1h',
     });
 
-    return { accessToken };
+    const refreshToken = await this.createRefreshToken(user.id);
+
+    return { accessToken, refreshToken };
+  }
+
+  async createRefreshToken(id: string) {
+    const refreshToken = await this.jwtService.sign(
+      { sub: id },
+      {
+        expiresIn: '7d',
+      },
+    );
+    const hashed = await bcrypt.hash(refreshToken, 10);
+    await this.prisma.user.update({
+      data: { refreshToken: hashed },
+      where: { id },
+    });
+    return refreshToken;
+  }
+
+  async accessRefreshToken(refreshToken: string) {
+    try {
+      const payload = await this.jwtService.verify(refreshToken);
+      const user = await this.prisma.user.findFirst({
+        where: { id: payload.sub },
+      });
+
+      if (!user) throw new UnauthorizedException();
+
+      const isValidToken = await bcrypt.compare(
+        refreshToken,
+        user.refreshToken,
+      );
+      if (!isValidToken) throw new UnauthorizedException();
+
+      const accessToken = await this.jwtService.sign(payload, {
+        expiresIn: '1h',
+      });
+      return { accessToken };
+    } catch (error) {
+      throw new UnauthorizedException();
+    }
   }
 }
