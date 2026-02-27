@@ -42,7 +42,7 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Patch('me/addresses')
+  @Post('me/addresses')
   addAddress(
     @User() userId: string,
     @Body() createAddressDto: CreateAddressDto,

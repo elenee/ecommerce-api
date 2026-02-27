@@ -37,8 +37,47 @@ model Address {
   isDefault Boolean @default(false)
   user      User    @relation(fields: [userId], references: [id])
 }
-
+ 
 enum Role {
   ADMIN
   CUSTOMER
+}
+
+model Category {
+  id               String     @id @default(uuid())
+  name             String     @unique
+  description      String?
+  parentCategoryId String?
+  parent           Category?  @relation("CategoryToSubcategory", fields: [parentCategoryId], references: [id])
+  children         Category[] @relation("CategoryToSubcategory")
+  products         Product[]
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  price       Decimal
+  stock       Int
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  images      ProductImage[]
+  variants    ProductVariant[]
+  createdAt   DateTime @default(now())
+}
+
+model ProductImage {
+  id        String  @id @default(uuid())
+  productId String
+  url       String
+  isPrimary Boolean @default(false)
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+model ProductVariant {
+  id        String  @id @default(uuid())
+  productId String
+  name      String
+  value     String
+  product   Product @relation(fields: [productId], references: [id])
 }
