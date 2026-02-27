@@ -31,7 +31,7 @@ model Address {
   userId    String
   street    String
   city      String
-  state     String
+  state     String?
   country   String
   zipCode   String
   isDefault Boolean @default(false)

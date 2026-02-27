@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { CreateAddressDto } from './dto/create-address.dto';
 
 @Injectable()
 export class UsersService {
@@ -13,7 +14,9 @@ export class UsersService {
   }
 
   findAll() {
-    return this.prisma.user.findMany();
+    return this.prisma.user.findMany({
+      include: { addresses: true },
+    });
   }
 
   async findByEmail(email: string) {
@@ -40,5 +43,15 @@ export class UsersService {
     const user = await this.prisma.user.delete({ where: { id } });
     if (!user) throw new NotFoundException('User not found');
     return 'user deleted successfully';
+  }
+
+  async addAddress(userId: string, createAddressDto: CreateAddressDto) {
+    const address = await this.prisma.address.create({
+      data: {
+        ...createAddressDto,
+        userId,
+      },
+    });
+    return address;
   }
 }

@@ -13,6 +13,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { User } from 'src/auth/decorators/user.decorator';
+import { CreateAddressDto } from './dto/create-address.dto';
 
 @Controller('users')
 export class UsersController {
@@ -38,5 +39,15 @@ export class UsersController {
   @Delete()
   remove(@User() id: string) {
     return this.usersService.remove(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('me/addresses')
+  addAddress(
+    @User() userId: string,
+    @Body() createAddressDto: CreateAddressDto,
+  ) {
+    console.log(userId);
+    return this.usersService.addAddress(userId, createAddressDto);
   }
 }
