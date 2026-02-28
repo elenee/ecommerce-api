@@ -44,19 +44,20 @@ export class AuthService {
   async signIn(user: any) {
     const payload = {
       sub: user.id,
+      role: user.role,
     };
     const accessToken = await this.jwtService.sign(payload, {
       expiresIn: '1h',
     });
 
-    const refreshToken = await this.createRefreshToken(user.id);
+    const refreshToken = await this.createRefreshToken(user.id, user.role);
 
     return { accessToken, refreshToken };
   }
 
-  async createRefreshToken(id: string) {
+  async createRefreshToken(id: string, role: string) {
     const refreshToken = await this.jwtService.sign(
-      { sub: id },
+      { sub: id, role },
       {
         expiresIn: '7d',
       },
