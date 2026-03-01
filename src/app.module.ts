@@ -10,9 +10,12 @@ import { ProductsModule } from './products/products.module';
 import { CartModule } from './cart/cart.module';
 import { OrdersModule } from './orders/orders.module';
 import { PaymentsModule } from './payments/payments.module';
+import { ReviewsModule } from './reviews/reviews.module';
+import { CouponsModule } from './coupons/coupons.module';
+import { WishlistModule } from './wishlist/wishlist.module';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, AuthModule, UsersModule, CategoryModule, ProductsModule, CartModule, OrdersModule, PaymentsModule],
+  imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, AuthModule, UsersModule, CategoryModule, ProductsModule, CartModule, OrdersModule, PaymentsModule, ReviewsModule, CouponsModule, WishlistModule],
   controllers: [AppController],
   providers: [AppService],
 })
