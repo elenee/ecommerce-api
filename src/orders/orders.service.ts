@@ -64,12 +64,14 @@ export class OrdersService {
         }),
       });
 
-      for (const item of cartItems) {
-        await tx.product.update({
-          where: { id: item.productId },
-          data: { stock: { decrement: item.quantity } },
-        });
-      }
+      await Promise.all(
+        cartItems.map((item) =>
+          tx.product.update({
+            where: { id: item.productId },
+            data: { stock: { decrement: item.quantity } },
+          }),
+        ),
+      );
 
       await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
 
