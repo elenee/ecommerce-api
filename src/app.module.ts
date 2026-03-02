@@ -13,9 +13,10 @@ import { PaymentsModule } from './payments/payments.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { CouponsModule } from './coupons/coupons.module';
 import { WishlistModule } from './wishlist/wishlist.module';
+import { AwsS3Module } from './aws-s3/aws-s3.module';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, AuthModule, UsersModule, CategoryModule, ProductsModule, CartModule, OrdersModule, PaymentsModule, ReviewsModule, CouponsModule, WishlistModule],
+  imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, AuthModule, UsersModule, CategoryModule, ProductsModule, CartModule, OrdersModule, PaymentsModule, ReviewsModule, CouponsModule, WishlistModule, AwsS3Module],
   controllers: [AppController],
   providers: [AppService],
 })
