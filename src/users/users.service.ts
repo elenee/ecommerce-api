@@ -13,10 +13,11 @@ export class UsersService {
     return user;
   }
 
-  findAll() {
-    return this.prisma.user.findMany({
+  async findAll() {
+    const users = await this.prisma.user.findMany({
       include: { addresses: true },
     });
+    return users.map(({ password, refreshToken, ...rest }) => rest);
   }
 
   async findByEmail(email: string) {
@@ -27,7 +28,8 @@ export class UsersService {
   async findOne(id: string) {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException('User not found');
-    return user;
+    const { password, refreshToken, ...rest } = user;
+    return rest;
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
@@ -36,7 +38,8 @@ export class UsersService {
       where: { id },
     });
     if (!user) throw new NotFoundException('User not found');
-    return user;
+    const { password, refreshToken, ...rest } = user;
+    return rest;
   }
 
   async remove(id: string) {

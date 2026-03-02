@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -55,6 +56,13 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
+  async currentUser(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('user not found');
+    const { password, refreshToken, ...rest } = user;
+    return rest;
+  }
+
   async createRefreshToken(id: string, role: string) {
     const refreshToken = await this.jwtService.sign(
       { sub: id, role },
@@ -85,12 +93,18 @@ export class AuthService {
       );
       if (!isValidToken) throw new UnauthorizedException();
 
-      const accessToken = await this.jwtService.sign(payload, {
-        expiresIn: '1h',
-      });
+      const accessToken = await this.jwtService.sign(
+        {
+          sub: payload.sub,
+          role: payload.role,
+        },
+        {
+          expiresIn: '1h',
+        },
+      );
       return { accessToken };
     } catch (error) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException(error.message);
     }
   }
 }
