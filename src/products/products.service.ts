@@ -4,6 +4,7 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateProductImageDto } from './dto/create-product-image.dto';
 import { CreateProductVariantDto } from './dto/cretae-product-variant.dto';
+import { PaginationDto } from './dto/pagination.dto';
 
 @Injectable()
 export class ProductsService {
@@ -16,10 +17,51 @@ export class ProductsService {
     return product;
   }
 
-  findAll() {
-    return this.prisma.product.findMany({
-      include: { images: true, variants: true },
-    });
+  async findAll(query: PaginationDto) {
+    let {
+      page = 1,
+      limit = 10,
+      search,
+      category,
+      minPrice,
+      maxPrice,
+      sortBy = 'createdAt',
+      order,
+    } = query;
+    let orderby = { [sortBy]: order };
+    const where = {
+      name: search
+        ? { contains: search, mode: 'insensitive' as const }
+        : undefined,
+      category: category
+        ? { name: { contains: category, mode: 'insensitive' as const } }
+        : undefined,
+      price: {
+        gte: minPrice || undefined,
+        lte: maxPrice || undefined,
+      },
+    };
+
+    if (limit > 10) limit = 10;
+    const skipIndex = (page - 1) * limit;
+
+    const [products, total] = await this.prisma.$transaction([
+      this.prisma.product.findMany({
+        orderBy: [orderby],
+        where,
+        skip: skipIndex,
+        take: limit,
+        include: { images: true, variants: true },
+      }),
+      this.prisma.product.count({ where }),
+    ]);
+
+    return {
+      products,
+      total,
+      page,
+      lastPage: Math.ceil(total / limit),
+    };
   }
 
   async findOne(id: string) {
