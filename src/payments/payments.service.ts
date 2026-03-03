@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { EmailService } from 'src/email/email.service';
 
 @Injectable()
 export class PaymentsService {
@@ -13,6 +14,7 @@ export class PaymentsService {
   constructor(
     private readonly configService: ConfigService,
     private prisma: PrismaService,
+    private emailService: EmailService,
   ) {
     const stripeSecretKey =
       this.configService.get<string>('STRIPE_SECRET_KEY')!;
@@ -27,7 +29,7 @@ export class PaymentsService {
     this.stripeService = new Stripe(stripeSecretKey, {});
   }
 
-  async createPaymentInten(orderId: string) {
+  async createPaymentIntent(orderId: string) {
     let stripeIntent: Stripe.PaymentIntent;
 
     const order = await this.prisma.order.findUnique({
@@ -105,5 +107,44 @@ export class PaymentsService {
     }
 
     return { recieved: true };
+  }
+
+  async confirmPayment(paymentIntentId: string) {
+    const paymentIntent = await this.stripeService.paymentIntents.confirm(
+      paymentIntentId,
+      { payment_method: 'pm_card_visa' },
+    );
+    if (paymentIntent.status === 'succeeded') {
+      const orderId = paymentIntent.metadata.orderId;
+      const order = await this.prisma.order.findUnique({
+        where: { id: orderId },
+        include: { user: true },
+      });
+      if (!order) {
+        throw new NotFoundException('Order not found');
+      }
+
+      await this.prisma.order.update({
+        where: { id: orderId },
+        data: { status: 'PAID' },
+      });
+      await this.prisma.payment.update({
+        where: { orderId },
+        data: { status: 'COMPLETED' },
+      });
+
+      await this.emailService.sendEmail(
+        order.user.email,
+        'Payment Confirmed',
+        process.env.SENDGRID_PAYMENT_CONFIRMED_TEMPLATE_ID!,
+        {
+          firstName: order.user.firstName,
+          orderId: order.id,
+          total: Number(order.total).toFixed(2),
+        },
+      );
+    }
+
+    return { status: paymentIntent.status };
   }
 }

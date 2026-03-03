@@ -5,6 +5,7 @@ import {
   UseGuards,
   Req,
   Headers,
+  Body,
 } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
@@ -17,7 +18,7 @@ export class PaymentsController {
   @UseGuards(JwtAuthGuard)
   @Post('create-payment-intent/:orderId')
   createPaymentIntent(@Param('orderId') orderId: string) {
-    return this.paymentsService.createPaymentInten(orderId);
+    return this.paymentsService.createPaymentIntent(orderId);
   }
 
   @Post('webhook')
@@ -26,5 +27,10 @@ export class PaymentsController {
     @Headers('stripe-signature') signature: string,
   ) {
     return this.paymentsService.handleWebhook(req.rawBody, signature);
+  }
+
+  @Post('confirm-payment')
+  confirmPayment(@Body('paymentIntentId') paymentIntentId: string) {
+    return this.paymentsService.confirmPayment(paymentIntentId);
   }
 }

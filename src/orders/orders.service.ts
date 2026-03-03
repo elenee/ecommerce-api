@@ -6,13 +6,20 @@ import {
 import { CreateOrderDto } from './dto/create-order.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { OrderStatus } from '@prisma/client';
+import { EmailService } from 'src/email/email.service';
 
 @Injectable()
 export class OrdersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private emailService: EmailService,
+  ) {}
 
   async createOrder(userId: string, createOrderDto: CreateOrderDto) {
-    return await this.prisma.$transaction(async (tx) => {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('user not found');
+
+    const order = await this.prisma.$transaction(async (tx) => {
       const cart = await tx.cart.findUnique({
         where: { userId },
         include: { items: { include: { product: true } } },
@@ -80,6 +87,22 @@ export class OrdersService {
         include: { items: { include: { product: true } } },
       });
     });
+
+    if (!order) {
+      throw new NotFoundException('order not found');
+    }
+
+    await this.emailService.sendEmail(
+      user.email,
+      'Order Confirmation',
+      process.env.SENDGRID_ORDER_CONFIRMATION_TEMPLATE_ID!,
+      {
+        firstName: user.firstName,
+        orderId: order.id,
+        total: Number(order.total).toFixed(2),
+      },
+    );
+    return order;
   }
 
   async getAllOrders() {
@@ -113,25 +136,49 @@ export class OrdersService {
       where: {
         id: orderId,
       },
+      include: { user: true },
     });
     if (!order) throw new NotFoundException('order not found');
-    return await this.prisma.order.update({
+
+    const updated = await this.prisma.order.update({
       where: { id: orderId },
       data: { status },
     });
+
+    const templateMap = {
+      SHIPPED: process.env.SENDGRID_ORDER_SHIPPED_TEMPLATE_ID!,
+      DELIVERED: process.env.SENDGRID_ORDER_DELIVERED_TEMPLATE_ID!,
+      CANCELLED: process.env.SENDGRID_ORDER_CANCELLED_TEMPLATE_ID!,
+    };
+
+    const templateId = templateMap[status];
+    if (templateId) {
+      await this.emailService.sendEmail(
+        order.user.email,
+        `Order ${status.charAt(0) + status.slice(1).toLowerCase()}`,
+        templateId,
+        {
+          firstName: order.user.firstName,
+          orderId: order.id,
+          total: Number(order.total).toFixed(2),
+        },
+      );
+    }
+
+    return updated;
   }
 
   async cancelOrder(userId: string, orderId: string) {
     const order = await this.prisma.order.findUnique({
       where: { id: orderId, userId },
-      include: { items: true },
+      include: { items: true, user: true },
     });
     if (!order) throw new NotFoundException('order not found');
     if (order.status !== 'PENDING') {
       throw new BadRequestException('Only pending orders can be canceled');
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    const canceledOrder = await this.prisma.$transaction(async (tx) => {
       for (const item of order.items) {
         await tx.product.update({
           where: { id: item.productId },
@@ -144,5 +191,18 @@ export class OrdersService {
         data: { status: OrderStatus.CANCELLED },
       });
     });
+
+    await this.emailService.sendEmail(
+      order.user.email,
+      'Order Cancelled',
+      process.env.SENDGRID_ORDER_CANCELLED_TEMPLATE_ID!,
+      {
+        firstName: order.user.firstName,
+        orderId: order.id,
+        total: Number(order.total).toFixed(2),
+      },
+    );
+
+    return canceledOrder;
   }
 }

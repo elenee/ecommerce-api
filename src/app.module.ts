@@ -16,6 +16,7 @@ import { WishlistModule } from './wishlist/wishlist.module';
 import { AwsS3Module } from './aws-s3/aws-s3.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { APP_GUARD } from '@nestjs/core';
         },
       ],
     }),
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [
