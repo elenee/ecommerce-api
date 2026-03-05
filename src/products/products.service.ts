@@ -5,12 +5,14 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateProductVariantDto } from './dto/cretae-product-variant.dto';
 import { PaginationDto } from './dto/pagination.dto';
 import { AwsS3Service } from 'src/aws-s3/aws-s3.service';
+import { RedisService } from 'src/redis/redis.service';
 
 @Injectable()
 export class ProductsService {
   constructor(
     private prisma: PrismaService,
     private awsService: AwsS3Service,
+    private redisService: RedisService,
   ) {}
 
   async create(
@@ -37,6 +39,8 @@ export class ProductsService {
       }),
     );
 
+    await this.redisService.incr('products:version');
+
     return this.prisma.product.findUnique({
       where: { id: product.id },
       include: { images: true, variants: true },
@@ -54,6 +58,16 @@ export class ProductsService {
       sortBy = 'createdAt',
       order,
     } = query;
+
+    const version = (await this.redisService.get('products:version')) ?? '1';
+    const cacheKey = `products:v:${version}:${JSON.stringify(query)}`;
+    const cached = await this.redisService.get(cacheKey);
+
+    if (cached) {
+      console.log('returning all products from redis');
+      return JSON.parse(cached);
+    }
+
     let orderby = { [sortBy]: order };
     const where = {
       name: search
@@ -81,18 +95,28 @@ export class ProductsService {
       }),
       this.prisma.product.count({ where }),
     ]);
-
-    return {
+    const result = {
       products,
       total,
       page,
       lastPage: Math.ceil(total / limit),
     };
+
+    await this.redisService.set(cacheKey, JSON.stringify(result), 300);
+    return result;
   }
 
   async findOne(id: string) {
+    const cacheKey = `productId:${id}`;
+    const cached = await this.redisService.get(cacheKey);
+    if (cached) {
+      console.log('returning from redis');
+      return JSON.parse(cached);
+    }
     const product = await this.prisma.product.findUnique({ where: { id } });
+
     if (!product) throw new NotFoundException('Product not found');
+    await this.redisService.set(cacheKey, JSON.stringify(product), 300);
     return product;
   }
 
@@ -126,6 +150,8 @@ export class ProductsService {
       }
     }
 
+    await this.redisService.delete(`productId:${id}`);
+    await this.redisService.incr('products:version');
     return await this.prisma.product.update({
       where: { id },
       data: updateProductDto,
@@ -143,6 +169,9 @@ export class ProductsService {
     await Promise.all(
       productImages.map((image) => this.awsService.deleteFile(image.key)),
     );
+
+    await this.redisService.delete(`productId:${id}`);
+    await this.redisService.incr('products:version');
     await this.prisma.product.delete({ where: { id } });
     return 'product deleted successfully';
   }
@@ -157,6 +186,8 @@ export class ProductsService {
         productId,
       },
     });
+    await this.redisService.incr('products:version');
+    await this.redisService.delete(`productId:${productId}`);
     return variant;
   }
 
@@ -173,6 +204,9 @@ export class ProductsService {
       }),
     );
 
+    await this.redisService.incr('products:version');
+    await this.redisService.delete(`productId:${id}`);
+
     return this.prisma.product.findUnique({
       where: { id: product.id },
       include: { images: true, variants: true },
@@ -186,6 +220,8 @@ export class ProductsService {
     if (!productImage) throw new NotFoundException('image not found');
     await this.awsService.deleteFile(productImage.key);
     await this.prisma.productImage.delete({ where: { id: productImage.id } });
+    await this.redisService.incr('products:version');
+    await this.redisService.delete(`productId:${id}`);
     return 'image deleted successfully';
   }
 }

@@ -17,6 +17,7 @@ import { AwsS3Module } from './aws-s3/aws-s3.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { EmailModule } from './email/email.module';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { EmailModule } from './email/email.module';
       ],
     }),
     EmailModule,
+    RedisModule,
   ],
   controllers: [AppController],
   providers: [
