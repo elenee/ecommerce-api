@@ -195,6 +195,7 @@ npm run start:dev
 ```bash
 # Unit tests
 npm run test
+```
 
 ## Project Source
 
