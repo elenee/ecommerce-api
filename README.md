@@ -1,98 +1,201 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# E-Commerce API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A production-grade REST API for an e-commerce platform built with NestJS, PostgreSQL, and Prisma. Features JWT authentication, Stripe payments, AWS S3 image storage, Redis caching, and SendGrid email notifications.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Tech Stack
 
-## Description
+- **Framework:** NestJS
+- **Database:** PostgreSQL + Prisma ORM
+- **Cache:** Redis
+- **Payments:** Stripe
+- **Image Storage:** AWS S3
+- **Email:** SendGrid
+- **Auth:** JWT (access + refresh tokens)
+- **Containerization:** Docker + Docker Compose
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Features
 
-## Project setup
+- JWT authentication with refresh tokens and role-based access control (Admin / Customer)
+- Product management with image uploads to AWS S3, variants, pagination, and filtering
+- Shopping cart with stock validation
+- Order management with full lifecycle (Pending → Paid → Shipped → Delivered / Cancelled)
+- Stripe payment integration with webhook handling
+- Coupon system with percentage and fixed discounts
+- Product reviews and wishlist
+- Redis caching with version-based cache invalidation
+- Transactional email notifications at every order lifecycle event via SendGrid
+- Rate limiting on authentication endpoints
 
-```bash
-$ npm install
+## Getting Started
+
+### Prerequisites
+
+- Docker and Docker Compose
+- AWS account with an S3 bucket
+- Stripe account
+- SendGrid account
+
+### Environment Variables
+
+Create a `.env` file in the root directory:
+
+```env
+# Database
+DATABASE_URL=postgresql://postgres:postgres@db:5432/ecommerce_api
+
+# JWT
+JWT_SECRET=your_jwt_secret
+
+# AWS S3
+AWS_ACCESS_KEY=your_access_key
+AWS_SECRET_ACCESS_KEY=your_secret_access_key
+AWS_REGION=your_region
+AWS_BUCKET_NAME=your_bucket_name
+
+# Stripe
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+
+# SendGrid
+SENDGRID_API_KEY=SG....
+SENDGRID_SENDER_EMAIL=your_verified_email@example.com
+SENDGRID_ORDER_CONFIRMATION_TEMPLATE_ID=d-...
+SENDGRID_PAYMENT_CONFIRMED_TEMPLATE_ID=d-...
+SENDGRID_ORDER_SHIPPED_TEMPLATE_ID=d-...
+SENDGRID_ORDER_DELIVERED_TEMPLATE_ID=d-...
+SENDGRID_ORDER_CANCELLED_TEMPLATE_ID=d-...
+
+# Redis
+REDIS_HOST=redis
+REDIS_PORT=6379
+
+# Admin Seed
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=your_admin_password
+ADMIN_FIRST_NAME=Admin
+ADMIN_LAST_NAME=Admin
 ```
 
-## Compile and run the project
+### Running with Docker
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+docker-compose up --build
 ```
 
-## Run tests
+This will:
+- Start the PostgreSQL database
+- Start the Redis cache
+- Run database migrations
+- Seed the admin user
+- Start the API on port 3000
+
+### Running Locally
 
 ```bash
-# unit tests
-$ npm run test
+# Install dependencies
+npm install
 
-# e2e tests
-$ npm run test:e2e
+# Run migrations
+npx prisma migrate dev
 
-# test coverage
-$ npm run test:cov
+# Start in development mode
+npm run start:dev
 ```
 
-## Deployment
+> When running locally, set `DATABASE_URL` to use `localhost` instead of `db`, and `REDIS_HOST` to `localhost`.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## API Endpoints
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Auth
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| POST | /auth/sign-up | Public | Register a new user |
+| POST | /auth/sign-in | Public | Login |
+| GET | /auth/me | Auth | Get current user |
+| POST | /auth/refresh-token | Public | Refresh access token |
+
+### Products
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| GET | /products | Public | List products with pagination and filters |
+| GET | /products/:id | Public | Get product by ID |
+| POST | /products | Admin | Create product with images |
+| PATCH | /products/:id | Admin | Update product |
+| DELETE | /products/:id | Admin | Delete product |
+| POST | /products/:id/variants | Admin | Add variant |
+| POST | /products/:id/images | Admin | Add images |
+| DELETE | /products/:id/images/:imageId | Admin | Delete image |
+
+### Cart
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| GET | /cart | Auth | Get cart |
+| POST | /cart/add | Auth | Add item to cart |
+| DELETE | /cart/remove/:productId | Auth | Remove item from cart |
+| DELETE | /cart/clear | Auth | Clear cart |
+
+### Orders
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| POST | /orders | Auth | Create order |
+| GET | /orders | Auth | Get user orders |
+| GET | /orders/:id | Auth | Get order by ID |
+| PATCH | /orders/:id/cancel | Auth | Cancel order |
+| GET | /orders/all | Admin | Get all orders |
+| PATCH | /orders/:id/status | Admin | Update order status |
+
+### Payments
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| POST | /payments/create-payment-intent/:orderId | Auth | Create Stripe payment intent |
+| POST | /payments/confirm-payment | Auth | Confirm payment |
+| POST | /payments/webhook | Public | Stripe webhook handler |
+
+### Coupons
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| POST | /coupons | Admin | Create coupon |
+| GET | /coupons | Admin | List coupons |
+| PATCH | /coupons/:id | Admin | Update coupon |
+| DELETE | /coupons/:id | Admin | Delete coupon |
+| POST | /coupons/:orderId/apply | Auth | Apply coupon to order |
+
+### Reviews
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| POST | /reviews/:productId | Auth | Create review |
+| GET | /reviews/:productId | Public | Get product reviews |
+| DELETE | /reviews/:id | Auth | Delete review |
+
+### Wishlist
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| GET | /wishlist | Auth | Get wishlist |
+| POST | /wishlist/:productId | Auth | Add to wishlist |
+| DELETE | /wishlist/:productId | Auth | Remove from wishlist |
+
+### Users
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| PATCH | /users/me | Auth | Update profile |
+| POST | /users/me/addresses | Auth | Add address |
+| GET | /users | Admin | List all users |
+
+### Categories
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| POST | /category | Admin | Create category |
+| GET | /category | Public | List categories |
+| PATCH | /category/:id | Admin | Update category |
+| DELETE | /category/:id | Admin | Delete category |
+
+## Running Tests
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+# Unit tests
+npm run test
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## Project Source
 
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+This project was built as part of the [roadmap.sh E-Commerce API](https://roadmap.sh/projects/ecommerce-api) backend project challenge.
