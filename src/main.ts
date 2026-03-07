@@ -7,6 +7,9 @@ async function bootstrap() {
     rawBody: true,
     bodyParser: true,
   });
+  app.enableCors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  });
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

@@ -52,8 +52,13 @@ export class AuthService {
     });
 
     const refreshToken = await this.createRefreshToken(user.id, user.role);
+    const {
+      password,
+      refreshToken: hashed,
+      ...userWithoutSensitiveData
+    } = user;
 
-    return { accessToken, refreshToken };
+    return { accessToken, refreshToken, user: userWithoutSensitiveData };
   }
 
   async currentUser(userId: string) {
