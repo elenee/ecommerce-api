@@ -70,6 +70,7 @@ export class ProductsService {
 
     let orderby = { [sortBy]: order };
     const where = {
+      isActive: true,
       name: search
         ? { contains: search, mode: 'insensitive' as const }
         : undefined,
@@ -162,17 +163,13 @@ export class ProductsService {
   async remove(id: string) {
     const product = await this.prisma.product.findUnique({ where: { id } });
     if (!product) throw new NotFoundException('Product not found');
-    const productImages = await this.prisma.productImage.findMany({
-      where: { productId: product.id },
-    });
-
-    await Promise.all(
-      productImages.map((image) => this.awsService.deleteFile(image.key)),
-    );
 
     await this.redisService.delete(`productId:${id}`);
     await this.redisService.incr('products:version');
-    await this.prisma.product.delete({ where: { id } });
+    await this.prisma.product.update({
+      where: { id },
+      data: { isActive: false },
+    });
     return 'product deleted successfully';
   }
 

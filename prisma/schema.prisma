@@ -53,10 +53,20 @@ model Category {
   id               String     @id @default(uuid())
   name             String     @unique
   description      String?
+  isActive         Boolean    @default(true)
   parentCategoryId String?
   parent           Category?  @relation("CategoryToSubcategory", fields: [parentCategoryId], references: [id])
   children         Category[] @relation("CategoryToSubcategory")
   products         Product[]
+  images           CategoryImage[]
+}
+
+model CategoryImage {
+  id        String   @id @default(uuid())
+  categoryId String
+  url       String
+  key       String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 }
 
 model Product {
@@ -65,6 +75,7 @@ model Product {
   description String?
   price       Decimal
   stock       Int
+  isActive    Boolean  @default(true)
   categoryId  String
   category    Category @relation(fields: [categoryId], references: [id])
   images      ProductImage[]

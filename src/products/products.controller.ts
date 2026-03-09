@@ -57,13 +57,11 @@ export class ProductsController {
 
   @Get()
   findAll(@Query() query: PaginationDto) {
-    console.log('help')
     return this.productsService.findAll(query);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    console.log('help')
     return this.productsService.findOne(id);
   }
 

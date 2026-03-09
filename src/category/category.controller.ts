@@ -7,6 +7,8 @@ import {
   Param,
   Delete,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -15,6 +17,7 @@ import { RoleGuard } from 'src/auth/guards/role.guard';
 import { Role } from 'src/auth/decorators/roles.decorator';
 import { Roles } from 'src/auth/enums/role.enum';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('category')
 export class CategoryController {
@@ -22,9 +25,13 @@ export class CategoryController {
 
   @UseGuards(JwtAuthGuard, RoleGuard)
   @Role([Roles.ADMIN])
+  @UseInterceptors(FileInterceptor('file'))
   @Post()
-  create(@Body() createCategoryDto: CreateCategoryDto) {
-    return this.categoryService.create(createCategoryDto);
+  create(
+    @Body() createCategoryDto: CreateCategoryDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.categoryService.create(createCategoryDto, file);
   }
 
   @Get()
@@ -40,11 +47,13 @@ export class CategoryController {
   @UseGuards(JwtAuthGuard, RoleGuard)
   @Role([Roles.ADMIN])
   @Patch(':id')
+  @UseInterceptors(FileInterceptor('file'))
   update(
     @Param('id') id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,
+    @UploadedFile() file: Express.Multer.File,
   ) {
-    return this.categoryService.update(id, updateCategoryDto);
+    return this.categoryService.update(id, updateCategoryDto, file);
   }
 
   @UseGuards(JwtAuthGuard, RoleGuard)
