@@ -11,6 +11,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     this.client = new Redis({
       host: this.configService.get<string>('REDIS_HOST'),
       port: this.configService.get<number>('REDIS_PORT')!,
+      retryStrategy: (times) => Math.min(times * 500, 5000),
     });
 
     this.client.on('error', (error) => {
