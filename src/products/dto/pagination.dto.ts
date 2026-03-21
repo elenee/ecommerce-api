@@ -1,5 +1,12 @@
-import { IsEnum, IsNumber, IsOptional, IsString, Min } from 'class-validator';
-import { Type } from 'class-transformer';
+import {
+  IsBoolean,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+} from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 
 export class PaginationDto {
   @IsOptional()
@@ -41,4 +48,11 @@ export class PaginationDto {
   @IsOptional()
   @IsEnum(['asc', 'desc'])
   order?: 'asc' | 'desc' = 'desc';
+
+  @IsOptional()
+  @Transform(({ value }) =>
+    value === 'true' ? true : value === 'false' ? false : undefined,
+  )
+  @IsBoolean()
+  isActive?: boolean;
 }

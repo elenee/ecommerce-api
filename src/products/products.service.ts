@@ -57,6 +57,7 @@ export class ProductsService {
       maxPrice,
       sortBy = 'createdAt',
       order,
+      isActive,
     } = query;
 
     const version = (await this.redisService.get('products:version')) ?? '1';
@@ -70,7 +71,7 @@ export class ProductsService {
 
     let orderby = { [sortBy]: order };
     const where = {
-      isActive: true,
+      ...(isActive !== undefined && { isActive: isActive }),
       name: search
         ? { contains: search, mode: 'insensitive' as const }
         : undefined,
@@ -157,6 +158,17 @@ export class ProductsService {
       where: { id },
       data: updateProductDto,
       include: { images: true, variants: true },
+    });
+  }
+
+  async updateStatus(id: string, isActive: boolean) {
+    const product = await this.prisma.product.findUnique({ where: { id } });
+    if (!product) throw new NotFoundException('Product not found');
+    await this.redisService.delete(`productId:${id}`);
+    await this.redisService.incr('products:version');
+    return await this.prisma.product.update({
+      where: { id },
+      data: { isActive },
     });
   }
 

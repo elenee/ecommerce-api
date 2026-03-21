@@ -67,6 +67,13 @@ export class ProductsController {
 
   @UseGuards(JwtAuthGuard, RoleGuard)
   @Role([Roles.ADMIN])
+  @Patch(':id/status')
+  updateStatus(@Param('id') id: string, @Body() body: { isActive: boolean }) {
+    return this.productsService.updateStatus(id, body.isActive); 
+  }
+
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Role([Roles.ADMIN])
   @Patch(':id')
   @UseInterceptors(FileInterceptor('file'))
   update(
