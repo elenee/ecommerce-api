@@ -115,7 +115,10 @@ export class ProductsService {
       console.log('returning from redis');
       return JSON.parse(cached);
     }
-    const product = await this.prisma.product.findUnique({ where: { id } });
+    const product = await this.prisma.product.findUnique({
+      where: { id },
+      include: { images: true },
+    });
 
     if (!product) throw new NotFoundException('Product not found');
     await this.redisService.set(cacheKey, JSON.stringify(product), 300);
