@@ -10,9 +10,7 @@ async function bootstrap() {
   });
   const usersService = app.get(UsersService);
   await usersService.ensureAdminExists();
-  app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  });
+  app.enableCors();
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
