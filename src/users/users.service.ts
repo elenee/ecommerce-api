@@ -3,10 +3,11 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateAddressDto } from './dto/create-address.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(createUserDto: CreateUserDto) {
     const user = await this.prisma.user.create({ data: createUserDto });
@@ -56,5 +57,36 @@ export class UsersService {
       },
     });
     return address;
+  }
+
+  async ensureAdminExists() {
+    const adminEmail = process.env.ADMIN_EMAIL;
+    if (!adminEmail) {
+      throw new Error('ADMIN_EMAIL environment variable is not set');
+    }
+
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    if (!adminPassword) {
+      throw new Error('ADMIN_PASSWORD environment variable is not set');
+    }
+
+    const existingAdmin = await this.prisma.user.findUnique({
+      where: { email: adminEmail },
+    });
+    if (existingAdmin) return;
+
+    const hashedPassword = await bcrypt.hash(adminPassword, 10);
+
+    await this.prisma.user.create({
+      data: {
+        email: adminEmail,
+        password: hashedPassword,
+        firstName: process.env.ADMIN_FIRST_NAME || 'Admin',
+        lastName: process.env.ADMIN_LAST_NAME || 'Admin',
+        role: 'ADMIN',
+      },
+    });
+
+    console.log('Admin seeded');
   }
 }
