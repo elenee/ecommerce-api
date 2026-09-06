@@ -17,11 +17,13 @@ export class CloudinaryService {
       throw new BadRequestException('key and buffer is required');
     }
 
+    const publicId = key.replace(/\.[^/.]+$/, '');
+
     try {
       const result = await new Promise<any>((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
           {
-            public_id: key,
+            public_id: publicId,
             resource_type: 'image',
           },
           (error, result) => {
@@ -44,8 +46,10 @@ export class CloudinaryService {
       throw new BadRequestException('key is required');
     }
 
+    const publicId = key.replace(/\.[^/.]+$/, '');
+
     try {
-      await cloudinary.uploader.destroy(key, {
+      await cloudinary.uploader.destroy(publicId, {
         resource_type: 'image',
       });
     } catch (error) {
