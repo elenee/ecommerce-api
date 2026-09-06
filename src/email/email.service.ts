@@ -4,9 +4,13 @@ import sgMail from '@sendgrid/mail';
 
 @Injectable()
 export class EmailService {
+  private readonly apiKey?: string;
   constructor(private configService: ConfigService) {
-    const apiKey = this.configService.get<string>('SENDGRID_API_KEY')!;
-    sgMail.setApiKey(apiKey);
+    this.apiKey = this.configService.get<string>('SENDGRID_API_KEY');
+
+    if (this.apiKey) {
+      sgMail.setApiKey(this.apiKey);
+    }
   }
 
   async sendEmail(
@@ -16,7 +20,7 @@ export class EmailService {
     dynamicData: Record<string, any>,
   ) {
     const from = this.configService.get<string>('SENDGRID_SENDER_EMAIL');
-    if (!from) {
+    if (!this.apiKey || !from) {
       throw new BadRequestException(
         'SENDGRID_SENDER_EMAIL is not defined in the configuration',
       );
@@ -30,7 +34,7 @@ export class EmailService {
     };
     try {
       await sgMail.send(msg);
-    } catch (error) {
+    } catch (error: any) {
       console.log('SendGrid Error:', error.response?.body || error.message);
       throw error;
     }
