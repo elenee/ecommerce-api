@@ -4,16 +4,16 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateProductVariantDto } from './dto/cretae-product-variant.dto';
 import { PaginationDto } from './dto/pagination.dto';
-import { AwsS3Service } from 'src/aws-s3/aws-s3.service';
 import { RedisService } from 'src/redis/redis.service';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 @Injectable()
 export class ProductsService {
   constructor(
     private prisma: PrismaService,
-    private awsService: AwsS3Service,
+    private cloudinaryService: CloudinaryService,
     private redisService: RedisService,
-  ) {}
+  ) { }
 
   async create(
     createProductDto: CreateProductDto,
@@ -32,7 +32,7 @@ export class ProductsService {
     await Promise.all(
       allFiles.map(async ({ file, isPrimary }) => {
         const key = `products/${product.id}/${Date.now()}-${file.originalname}`;
-        const url = await this.awsService.uploadFile(key, file.buffer);
+        const url = await this.cloudinaryService.uploadFile(key, file.buffer);
         return this.prisma.productImage.create({
           data: { url, key, productId: product.id, isPrimary },
         });
@@ -137,7 +137,7 @@ export class ProductsService {
 
     if (coverImage) {
       const key = `products/${product.id}/${Date.now()}-${coverImage.originalname}`;
-      const url = await this.awsService.uploadFile(key, coverImage.buffer);
+      const url = await this.cloudinaryService.uploadFile(key, coverImage.buffer);
 
       const existingCover = await this.prisma.productImage.findFirst({
         where: { productId: product.id, isPrimary: true },
@@ -209,7 +209,7 @@ export class ProductsService {
     await Promise.all(
       images.map(async (file) => {
         const key = `products/${product.id}/${Date.now()}-${file.originalname}`;
-        const url = await this.awsService.uploadFile(key, file.buffer);
+        const url = await this.cloudinaryService.uploadFile(key, file.buffer);
         return this.prisma.productImage.create({
           data: { url, key, productId: product.id, isPrimary: false },
         });
@@ -230,7 +230,7 @@ export class ProductsService {
       where: { productId: id, id: imageId },
     });
     if (!productImage) throw new NotFoundException('image not found');
-    await this.awsService.deleteFile(productImage.key);
+    await this.cloudinaryService.deleteFile(productImage.key);
     await this.prisma.productImage.delete({ where: { id: productImage.id } });
     await this.redisService.incr('products:version');
     await this.redisService.delete(`productId:${id}`);

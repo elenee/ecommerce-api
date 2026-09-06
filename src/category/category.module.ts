@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { CategoryController } from './category.controller';
-import { AwsS3Module } from 'src/aws-s3/aws-s3.module';
+import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
 
 @Module({
-  imports: [AwsS3Module],
+  imports: [CloudinaryModule],
   controllers: [CategoryController],
   providers: [CategoryService],
 })
-export class CategoryModule {}
+export class CategoryModule { }

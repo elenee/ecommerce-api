@@ -2,15 +2,15 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { AwsS3Service } from 'src/aws-s3/aws-s3.service';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import sharp from 'sharp';
 
 @Injectable()
 export class CategoryService {
   constructor(
     private prisma: PrismaService,
-    private awsService: AwsS3Service,
-  ) {}
+    private cloudinaryService: CloudinaryService,
+  ) { }
 
   async create(
     createCategoryDto: CreateCategoryDto,
@@ -30,7 +30,7 @@ export class CategoryService {
     resizedBuffer = await sharp(resizedBuffer).jpeg({ quality: 80 }).toBuffer();
 
     const key = `categories/${category.id}/${Date.now()}-${image.originalname}`;
-    const url = await this.awsService.uploadFile(key, resizedBuffer);
+    const url = await this.cloudinaryService.uploadFile(key, resizedBuffer);
     await this.prisma.categoryImage.create({
       data: { url, key, categoryId: category.id },
     });
@@ -79,7 +79,7 @@ export class CategoryService {
         .jpeg({ quality: 80 })
         .toBuffer();
       const key = `categories/${category.id}/${Date.now()}-${image.originalname}`;
-      const url = await this.awsService.uploadFile(key, resizedBuffer);
+      const url = await this.cloudinaryService.uploadFile(key, resizedBuffer);
 
       const existingCover = await this.prisma.categoryImage.findFirst({
         where: { categoryId: category.id },

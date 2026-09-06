@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProductsService } from './products.service';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { AwsS3Service } from 'src/aws-s3/aws-s3.service';
+import { AwsS3Service } from 'src/cloudinary/cloudinary.service';
 import { NotFoundException } from '@nestjs/common';
 
 const mockProduct = {

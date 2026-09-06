@@ -13,11 +13,11 @@ import { PaymentsModule } from './payments/payments.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { CouponsModule } from './coupons/coupons.module';
 import { WishlistModule } from './wishlist/wishlist.module';
-import { AwsS3Module } from './aws-s3/aws-s3.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { EmailModule } from './email/email.module';
 import { RedisModule } from './redis/redis.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
 
 @Module({
   imports: [
@@ -33,7 +33,7 @@ import { RedisModule } from './redis/redis.module';
     ReviewsModule,
     CouponsModule,
     WishlistModule,
-    AwsS3Module,
+    CloudinaryModule,
     ThrottlerModule.forRoot({
       throttlers: [
         {
@@ -54,4 +54,4 @@ import { RedisModule } from './redis/redis.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }
