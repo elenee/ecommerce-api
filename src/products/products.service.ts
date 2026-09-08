@@ -52,7 +52,7 @@ export class ProductsService {
       page = 1,
       limit = 10,
       search,
-      category,
+      categoryId,
       minPrice,
       maxPrice,
       sortBy = 'createdAt',
@@ -75,9 +75,7 @@ export class ProductsService {
       name: search
         ? { contains: search, mode: 'insensitive' as const }
         : undefined,
-      category: category
-        ? { name: { contains: category, mode: 'insensitive' as const } }
-        : undefined,
+       ...(categoryId && { categoryId }),
       price: {
         gte: minPrice || undefined,
         lte: maxPrice || undefined,
