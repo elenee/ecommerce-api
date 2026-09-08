@@ -75,7 +75,7 @@ export class ProductsService {
       name: search
         ? { contains: search, mode: 'insensitive' as const }
         : undefined,
-       ...(categoryId && { categoryId }),
+      ...(categoryId && { categoryId }),
       price: {
         gte: minPrice || undefined,
         lte: maxPrice || undefined,
@@ -115,7 +115,7 @@ export class ProductsService {
     }
     const product = await this.prisma.product.findUnique({
       where: { id },
-      include: { images: true },
+      include: { images: true, category: true, variants: true,  },
     });
 
     if (!product) throw new NotFoundException('Product not found');
