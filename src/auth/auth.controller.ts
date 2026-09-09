@@ -14,7 +14,7 @@ import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { User } from './decorators/user.decorator';
 import { Throttle } from '@nestjs/throttler';
-import { Response, Request as ExpressRequest } from 'express';
+import type { Response, Request as ExpressRequest } from 'express';
 
 @Controller('auth')
 export class AuthController {
