@@ -112,4 +112,13 @@ export class AuthService {
       throw new UnauthorizedException(error.message);
     }
   }
+
+
+  async logout(userId: string) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { refreshToken: null }
+    })
+    return { message: 'logged out successfully' };
+  }
 }

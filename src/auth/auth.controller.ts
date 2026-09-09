@@ -75,4 +75,15 @@ export class AuthController {
 
     return { message: 'token refreshed' };
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  async logout(@User() userId: string, @Res({ passthrough: true }) res: Response) {
+    await this.authService.logout(userId);
+
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken', { path: '/auth/refresh-token' });
+
+    return { message: 'logged out successfully' };
+  }
 }
