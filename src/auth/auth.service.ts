@@ -17,7 +17,7 @@ export class AuthService {
     private usersService: UsersService,
     private readonly jwtService: JwtService,
     private prisma: PrismaService,
-  ) {}
+  ) { }
 
   async signUp(signUpDto: SignUpDto) {
     const user = await this.usersService.findByEmail(signUpDto.email);
@@ -48,7 +48,7 @@ export class AuthService {
       role: user.role,
     };
     const accessToken = await this.jwtService.sign(payload, {
-      expiresIn: '1h',
+      expiresIn: '15m',
     });
 
     const refreshToken = await this.createRefreshToken(user.id, user.role);
@@ -69,7 +69,7 @@ export class AuthService {
   }
 
   async createRefreshToken(id: string, role: string) {
-    const refreshToken = await this.jwtService.sign(
+    const refreshToken = this.jwtService.sign(
       { sub: id, role },
       {
         expiresIn: '7d',
@@ -85,7 +85,7 @@ export class AuthService {
 
   async accessRefreshToken(refreshToken: string) {
     try {
-      const payload = await this.jwtService.verify(refreshToken);
+      const payload = this.jwtService.verify(refreshToken);
       const user = await this.prisma.user.findFirst({
         where: { id: payload.sub },
       });
@@ -98,13 +98,13 @@ export class AuthService {
       );
       if (!isValidToken) throw new UnauthorizedException();
 
-      const accessToken = await this.jwtService.sign(
+      const accessToken = this.jwtService.sign(
         {
           sub: payload.sub,
           role: payload.role,
         },
         {
-          expiresIn: '1h',
+          expiresIn: '15m',
         },
       );
       return { accessToken };
