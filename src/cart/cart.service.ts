@@ -8,7 +8,7 @@ import { CreateCartItemDto } from './dto/create-cart-item.dto';
 
 @Injectable()
 export class CartService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async getCart(userId: string) {
     const cart = await this.prisma.cart.findUnique({
@@ -37,6 +37,7 @@ export class CartService {
       where: {
         cartId: cart?.id,
         productId: product.id,
+        variantId: createCartItemDto.variantId ?? null,
       },
     });
 
@@ -61,7 +62,7 @@ export class CartService {
     });
   }
 
-  async removeItem(userId: string, productId: string) {
+  async removeItem(userId: string, productId: string, variantId?: string) {
     const product = await this.prisma.product.findUnique({
       where: { id: productId },
     });
@@ -74,6 +75,7 @@ export class CartService {
       where: {
         cartId: cart.id,
         productId: product.id,
+        variantId: variantId ?? null,
       },
     });
 

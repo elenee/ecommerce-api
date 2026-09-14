@@ -6,6 +6,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { CartService } from './cart.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
@@ -14,7 +15,7 @@ import { CreateCartItemDto } from './dto/create-cart-item.dto';
 
 @Controller('cart')
 export class CartController {
-  constructor(private readonly cartService: CartService) {}
+  constructor(private readonly cartService: CartService) { }
 
   @UseGuards(JwtAuthGuard)
   @Get()
@@ -33,8 +34,8 @@ export class CartController {
 
   @UseGuards(JwtAuthGuard)
   @Delete('remove/:productId')
-  removeItem(@User() userId: string, @Param('productId') productId: string) {
-    return this.cartService.removeItem(userId, productId);
+  removeItem(@User() userId: string, @Param('productId') productId: string, @Query('variantId') variantId?: string) {
+    return this.cartService.removeItem(userId, productId, variantId);
   }
 
   @UseGuards(JwtAuthGuard)
