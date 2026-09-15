@@ -39,6 +39,16 @@ export class CartController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Delete('remove-item/:productId')
+  removeItemCompletely(
+    @User() userId: string,
+    @Param('productId') productId: string,
+    @Query('variantId') variantId?: string,
+  ) {
+    return this.cartService.deleteItem(userId, productId, variantId);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Delete('clear')
   clearCart(@User() userId: string) {
     return this.cartService.clearCart(userId);

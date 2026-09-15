@@ -100,6 +100,36 @@ export class CartService {
     });
   }
 
+
+  async deleteItem(userId: string, productId: string, variantId?: string) {
+    const cart = await this.prisma.cart.findUnique({ where: { userId } });
+    if (!cart) throw new BadRequestException('cart is empty');
+
+    const existingItem = await this.prisma.cartItem.findFirst({
+      where: {
+        cartId: cart.id,
+        productId,
+        variantId: variantId ?? null,
+      },
+    });
+    if (!existingItem) {
+      throw new NotFoundException('cart item not found');
+    }
+
+    await this.prisma.cartItem.delete({
+      where: { id: existingItem.id },
+    });
+
+    return this.prisma.cart.findUnique({
+      where: { id: cart.id },
+      include: {
+        items: {
+          include: { product: true },
+        },
+      },
+    });
+  }
+
   async clearCart(userId: string) {
     const cart = await this.prisma.cart.findUnique({ where: { userId } });
     if (!cart) throw new BadRequestException('cart is empty');
