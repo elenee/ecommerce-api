@@ -13,7 +13,7 @@ export class CartService {
   async getCart(userId: string) {
     const cart = await this.prisma.cart.findUnique({
       where: { userId },
-      include: { items: { include: { product: true } } },
+      include: { items: { include: { product: { include: { images: true } } } } },
     });
     if (!cart) throw new NotFoundException('Cart is empty');
     return cart;
