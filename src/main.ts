@@ -13,7 +13,10 @@ async function bootstrap() {
   await usersService.ensureAdminExists();
   app.use(cookieParser())
   app.enableCors({
-    origin: 'http://localhost:5173',
+    origin: [
+      'http://localhost:5173',
+      'https://ecommerce-frontend-sigma-lac.vercel.app'
+    ],
     credentials: true,
   });
   app.useGlobalPipes(
